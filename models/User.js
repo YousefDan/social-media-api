@@ -50,7 +50,7 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     enum: [1, 2, 3],
   },
-});
+}, {timestamps: true});
 
 const User = mongoose.model("User", UserSchema);
 
