@@ -6,6 +6,7 @@ const {
   validateCreatePost,
   validateUpdatePost,
 } = require("../models/Post");
+const { User } = require("../models/User");
 const { verifyToken } = require("../middlewares/verifyToken");
 
 /**
@@ -82,6 +83,61 @@ router.delete(
     } else {
       res.status(403).send("you are not allowed");
     }
+  })
+);
+
+/**
+ *  @desc    Like or Dislike a post
+ *  @route   /api/posts/:postId/like
+ *  @method  PUT
+ *  @access  private only authenticated
+ */
+router.put(
+  "/:postId/like",
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const post = await Post.findById(req.params.postId);
+
+    if (!post.likes.includes(req.user._id)) {
+      await post.updateOne({ $push: { likes: req.user._id } });
+      res.status(200).send("the post has been liked");
+    } else {
+      await post.updateOne({ $pull: { likes: req.user._id } });
+      res.status(200).send("the post has been disliked");
+    }
+  })
+);
+
+/**
+ *  @desc    Get a post
+ *  @route   /api/posts/:postId
+ *  @method  GET
+ *  @access  private
+ */
+router.get(
+  "/:postId",
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const post = await Post.findById(req.params.postId);
+    res.status(200).send(post);
+  })
+);
+/**
+ *  @desc    Get timeline posts
+ *  @route   /api/posts/timeline/all
+ *  @method  GET
+ *  @access  private
+ */
+router.get(
+  "/timeline/all",
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const currentUser = await User.findById(req.user._id);
+    const userPosts = await Post.find({ userId: currentUser._id });
+    const friendPosts = await Promise.all(
+      currentUser.followings.map((friendId) => Post.find({ userId: friendId }))
+    );
+    res.status(200).json(userPosts.concat(...friendPosts));
   })
 );
 
