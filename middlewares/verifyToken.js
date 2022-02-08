@@ -17,7 +17,7 @@ function verifyToken(req, res, next) {
   }
 }
 
-// verify toke and authentication
+// verify toke and authorization
 function verifyTokenAndAuthorization(req, res, next) {
   verifyToken(req, res, () => {
     if (req.user._id === req.params.id || req.user.isAdmin) {
